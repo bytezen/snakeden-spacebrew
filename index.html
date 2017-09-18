@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script language="javascript" src="js/p5.min.js"></script>
+		<script language="javascript" src="js/p5.dom.min.js"></script>
+  		<script language="javascript" src="js/p5.spacebrew.js"></script>
+		  <!-- <script language="javascript" src="js/sketch.js"></script> -->
+	</head>
+	<body>
+		  <script>
+		 function setup() {
+let spacebrew = new Spacebrew()
+    ,onBooleanMessage = (msg) => {
+        console.log('[onBooleanMessage]',msg)
+    }
+spacebrew.addPublish("button","boolean",0)
+spacebrew.addSubscribe("background","boolean",0)
+spacebrew.onBooleanMessage( onBooleanMessage )
+spacebrew.connect("localhost",9000,"DEMO")
+
+    createCanvas(300,300);
+	background('red')
+	
+	// create a p5 button
+button = createButton('Press Me!');
+button.position(10, 100);
+button.mousePressed(sendTrue);
+button.mouseReleased(sendFalse);
+
+// sending data to Spacebrew
+function sendTrue(){
+	spacebrew.send("button", "boolean", "\"true\"");
+}
+	
+function sendFalse(){
+	spacebrew.send("button", "boolean", "\"false\"");
+}
+} 
+		  </script>
+
+	</body>
+</html>
