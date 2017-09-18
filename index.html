@@ -8,34 +8,49 @@
 	</head>
 	<body>
 		  <script>
-		 function setup() {
-let spacebrew = new Spacebrew()
-    ,onBooleanMessage = (msg) => {
-        console.log('[onBooleanMessage]',msg)
-    }
-spacebrew.addPublish("button","boolean",0)
-spacebrew.addSubscribe("background","boolean",0)
-spacebrew.onBooleanMessage( onBooleanMessage )
-spacebrew.connect("localhost",9000,"DEMO")
+		  	var spacebrew = {}
 
-    createCanvas(300,300);
-	background('red')
-	
-	// create a p5 button
-button = createButton('Press Me!');
-button.position(10, 100);
-button.mousePressed(sendTrue);
-button.mouseReleased(sendFalse);
+			function onBooleanMessage( name, value ){
+				if ( value == "true"){
+					// set the background to black
+					document.body.style.backgroundColor = "#000";
+				} else {
+					// set it white
+					document.body.style.backgroundColor = "#fff";
+				}
+			}
 
-// sending data to Spacebrew
-function sendTrue(){
-	spacebrew.send("button", "boolean", "\"true\"");
-}
-	
-function sendFalse(){
-	spacebrew.send("button", "boolean", "\"false\"");
-}
-} 
+			function setup() {
+				    createCanvas(300,300);
+					background('red')
+					
+					// create a p5 button
+				button = createButton('Press Me!');
+				button.position(10, 100);
+				button.mousePressed(sendTrue);
+				button.mouseReleased(sendFalse);
+
+				// sending data to Spacebrew
+				function sendTrue(){
+					spacebrew.send("button", "boolean", "true");
+				}
+					
+				function sendFalse(){
+					spacebrew.send("button", "boolean", "false");
+				}
+
+				// let spacebrew = new Spacebrew()
+				spacebrew = new Spacebrew()
+				    // ,onBooleanMessage = (msg) => {
+				    //     console.log('[onBooleanMessage]',msg)
+				    // }
+				spacebrew.addPublish("button","boolean",0)
+				spacebrew.addSubscribe("background","boolean",0)
+				spacebrew.onBooleanMessage( onBooleanMessage )
+				// spacebrew.connect("localhost",9000,"DEMO")
+				spacebrew.connect("127.0.0.1", 9000, "DEMO","");//,"a test of this shit");
+
+			} 
 		  </script>
 
 	</body>
