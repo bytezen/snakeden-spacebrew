@@ -9,7 +9,12 @@
 	</head>
 	<body>
 		  <script>
-		  	var spacebrew = {}
+			  var spacebrew = {}
+				  ,btnUp = {}
+				  ,btnDown = {}
+				  ,btnLeft = {}
+				  ,btnRight = {}
+				  ,btnJump = {}
 
 			function onBooleanMessage( name, value ){
 				if ( value == "true"){
@@ -21,11 +26,41 @@
 				}
 			}
 
+			function createUI() {
+				let center = (itemDim,parentDim) => {
+					return parentDim * 0.5 - itemDim * 0.5
+				}
+				//create the 4 buttons in the cardinal locations
+				//each button sends String command to WS
+				//with the player Id
+				let origin = canvas.position()
+
+				btnUp = createButton("^")
+				btnUp.position(center(btnUp.width, canvas.width),
+							   center(btnUp.height, 0.5 * canvas.height))
+
+				btnDown = createButton("v")
+				btnDown.position(center(btnDown.width, canvas.width),
+							   center(btnDown.height, 1.5 * canvas.height))
+
+				btnLeft = createButton("<")
+				btnLeft.position(center(btnLeft.width, 0.5 * canvas.width),
+							   center(btnLeft.height, canvas.height))
+
+				btnRight = createButton(">")
+				btnRight.position(center(btnRight.width, 1.5 * canvas.width),
+							   center(btnRight.height, canvas.height))
+
+  				btnJump = createButton("jump")
+				btnJump.position(center(btnJump.width, canvas.width),
+							   center(btnJump.height, canvas.height))
+
+			}
 			function setup() {
-				   canvas = createCanvas(300,300);
-					background('red')
-					
-					// create a p5 button
+				canvas = createCanvas(300,300);
+				background('red')
+				createUI()	
+				// create a p5 button
 				button = createButton('Press Me!');
 				button.position(10, 100);
 				button.mousePressed(sendTrue);
