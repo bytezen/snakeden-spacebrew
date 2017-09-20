@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="js/p5.min.js"></script>
+    <script src="js/p5.dom.min.js"></script>
+    <link rel="stylesheet" href="css/w3.css">
+    <style>
+      .playerControl {
+        max-height: 200px;
+        max-width: 200px;
+      }
+    </style>
+    <title>Snakeden - Game</title>
+</head>
+<body>
+        <div class="w3-container w3-cell _w3-border" id="sketch"></div>  
+<script>
+let playerModel = { name: ""
+                  , currentDirection: "right"                  
+                  }
+
+let btnUp = null
+    ,btnDown = null
+    ,btnLeft = null
+    ,btnRight = null
+    ,baseBtnClass = 'w3-button w3-xxxlarge '
+    ,btnPaletteClass = 'w3-text-white '
+    ,btnHoverPaletteClass = 'w3-hover-green w3-hover-text-white'
+    ,btnActiveClass = 'w3-green'
+    ,btnInactiveClass = ''
+    ,playerColor = 'green'
+
+
+function posTop(aBtn) {
+  aBtn.position(width * 0.5 - aBtn.width * 0.5
+               , 0.5 * height - 90)
+}
+
+function posBottom(aBtn) {
+  aBtn.position(width * 0.5 - aBtn.width * 0.5
+   , (0.5 * height) + 10)
+}
+
+function posLeft(aBtn) {
+    aBtn.position(width * 0.5 - 100
+   , (0.5 * height) -(aBtn.height * 0.5))
+}
+
+function posRight(aBtn) {
+    aBtn.position(width * 0.5 + 50
+   , (0.5 * height) - (0.5 * aBtn.height))
+}
+
+function setup() {
+  canvas = createCanvas(500,400)
+  background('green')
+  canvas.parent('sketch')
+  
+  ///*
+  btnUp = dirButton('&#8679')
+      .addClass(baseBtnClass)
+      .addClass(btnPaletteClass)
+      .addClass(btnHoverPaletteClass)
+      .addClass(playerModel.currentDirection == 'up' ? btnActiveClass : btnInactiveClass)
+      .style("width","75px")
+      .style("height","75px")
+ 
+    btnDown = dirButton('&#8681')
+      .addClass(baseBtnClass)
+      .addClass(btnPaletteClass)
+      .addClass(btnHoverPaletteClass)
+      .addClass(playerModel.currentDirection == 'down' ? btnActiveClass : btnInactiveClass)
+
+ 
+   
+    btnLeft = dirButton('&#8678')
+      .addClass(baseBtnClass)
+      .addClass(btnPaletteClass)
+      .addClass(btnHoverPaletteClass)
+      .addClass(playerModel.currentDirection == 'left' ? btnActiveClass : btnInactiveClass)
+  
+   
+    btnRight = dirButton('&#8680')
+      .addClass(baseBtnClass)
+      .addClass(btnPaletteClass)
+      .addClass(btnHoverPaletteClass)
+      .addClass(playerModel.currentDirection == 'right' ? btnActiveClass : btnInactiveClass)
+
+
+  
+  posTop(btnUp)
+  posBottom(btnDown)
+  posLeft(btnLeft)
+  posRight(btnRight)
+  
+  fill('white')
+  textSize(32)
+  textAlign(CENTER)
+  text("Player 1",width*0.5,50)
+
+}
+
+function draw() {
+  
+}
+
+//var palette = {'bg': 'lime', 'txt': 'green', 'border': 'deep-orange'}
+
+
+function dirButton(lbl, opts) {
+  /*
+  var styleClasses = "w3-"+opts.bg+
+                 " " + "w3-text-" +
+                 opts.txt + " " +
+                "w3-" + opts.border
+                +" " + "w3-border"
+                */
+  //console.log(styleClasses)
+  
+  return createButton(lbl)
+          .addClass('w3-button w3-xxxlarge')
+  
+}
+//upBtn(palette)
+
+//palette({txt, color, hover, selectedColor, selectedText})
+</script>   
+</body>
+</html>
