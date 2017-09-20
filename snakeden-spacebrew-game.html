@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="js/p5.min.js"></script>
     <script src="js/p5.dom.min.js"></script>
+    <script src="js/lodash.min.js"></script>
     <link rel="stylesheet" href="css/w3.css">
     <style>
       .playerControl {
@@ -17,116 +18,219 @@
 </head>
 <body>
         <div class="w3-container w3-cell _w3-border" id="sketch"></div>  
+
+<!-- Player Object -->
 <script>
-let playerModel = { name: ""
-                  , currentDirection: "right"                  
-                  }
+          let getPlayer = (name, opts = {}) => {
+            console.log(opts)
+            let config = _.assign({
+                                    initX: 0
+                                    ,initY: 0
+                                    ,initDirection: ""
+                                    ,initJumps: 3
+                                    ,speed: 1
+                                    ,color: "black"
+                                    }
+                                    ,opts)
+            console.log(config)
 
-let btnUp = null
-    ,btnDown = null
-    ,btnLeft = null
-    ,btnRight = null
-    ,baseBtnClass = 'w3-button w3-xxxlarge '
-    ,btnPaletteClass = 'w3-text-white '
-    ,btnHoverPaletteClass = 'w3-hover-green w3-hover-text-white'
-    ,btnActiveClass = 'w3-green'
-    ,btnInactiveClass = ''
-    ,playerColor = 'green'
+            let x = config.initX
+                , y = config.initY
+                , pX = config.initX
+                , pY = config.initY
+                , dir = config.initDirection
+                , jumps = config.initJumps
+                , speed = config.speed
+                , color = config.color
+                , alive = true
+                , jumping = false
+            
+            return {name:name
+                    , x
+                    , y
+                    , pX
+                    , pY
+                    , dir
+                    , jumps
+                    , speed
+                    , color
+                    , alive
+                    , jumping
+                   }
+        }
+</script>
+
+<!-- Main game Script -->
+<script>
+      let players = {} 
+           ,PLAYERS = 4
+
+      let addPlayer = (obj) => {
+                            players[obj.name] = obj
+                        }
+      let gameModel = {
+              players: []
+             ,activePlayers: {} 
+          }
+
+      let init = () => {
+        //initialize the game players
+        //currently supports N players
+        _.each(_.range(PLAYERS)
+              , i => {
+                       addPlayer(getPlayer('_player'+i+'_'
+                                          ,{color:'red'}
+                                          )
+                                )
+                     }
+              ) 
+      }
+      /* map pos -> fun(x,y,speed)
+         given a direction map to a function that will return a new position
+         moving at some speed in that direction
+      */
+      let posUpdate = {
+                 up:    (x,y,speed) => [x,y-speed]
+                ,down:  (x,y,speed) => [x,y+speed]
+                ,left:  (x,y,speed) => [x-speed,y]
+                ,right: (x,y,speed) => [x+speed,y]
+            }
+
+      var LT = 0, RT = 1, UP = 2, DN = 3, direction = DN;
+      var speed = 1; 
 
 
-function posTop(aBtn) {
-  aBtn.position(width * 0.5 - aBtn.width * 0.5
-               , 0.5 * height - 90)
-}
+        /* NOT USED??
+        let moveUp = (pos) => [pos[0], pos[1] - speed];
+        let moveDown = (pos) => [pos[0], pos[1] + speed];
+        let moveLeft = (pos) => [pos[0] - speed, pos[1]];
+        let moveRight = (pos) => [pos[0] + speed, pos[1]];
+        let posBufferLookup = (w,h) => {
+            return (pos) => ((pos[1]*w + pos[0] ) * pixelDensity()) 
+            // 4 * ((y * d + j) * width * d + (x * d + i));
+        } 
+        */
 
-function posBottom(aBtn) {
-  aBtn.position(width * 0.5 - aBtn.width * 0.5
-   , (0.5 * height) + 10)
-}
+        /*
 
-function posLeft(aBtn) {
-    aBtn.position(width * 0.5 - 100
-   , (0.5 * height) -(aBtn.height * 0.5))
-}
+        */
 
-function posRight(aBtn) {
-    aBtn.position(width * 0.5 + 50
-   , (0.5 * height) - (0.5 * aBtn.height))
-}
 
-function setup() {
-  canvas = createCanvas(500,400)
-  background('green')
-  canvas.parent('sketch')
-  
-  ///*
-  btnUp = dirButton('&#8679')
-      .addClass(baseBtnClass)
-      .addClass(btnPaletteClass)
-      .addClass(btnHoverPaletteClass)
-      .addClass(playerModel.currentDirection == 'up' ? btnActiveClass : btnInactiveClass)
-      .style("width","75px")
-      .style("height","75px")
- 
-    btnDown = dirButton('&#8681')
-      .addClass(baseBtnClass)
-      .addClass(btnPaletteClass)
-      .addClass(btnHoverPaletteClass)
-      .addClass(playerModel.currentDirection == 'down' ? btnActiveClass : btnInactiveClass)
+        // TODO: This should be a called from the onStringMessage Handler
+        // Pull the Channel name to get the player who submitted the message
+        // Check to see that the player is actually active and playing
+        // then update the playerModel Direction
+        let changeDirection = (fromElm) => {
+                                console.log('got something from elm -- ',fromElm)
+                                //now the idea is to set the direction of the player with
+                                //the matching name
+                                let [name,dir] = fromElm.split(',')
+                                let p = players[name]
+                                if(!_.isNil(p)) {
+                                    console.log('got a new direction for ', name, ': ', p, ' new direction = ', dir)
+                                    p.dir = dir.toLowerCase()
+                                } else {
+                                    console.error("directions for unknown player: ", fromElm)
+                                }
+                                 
+                              }
+         //hookup to Elm
+         /* NOT NEEDED Not using ELm
+        this.snakedenPorts.snakeden.ports.movePlayer.subscribe(changeDirection)
+        let portPlayerInput = this.snakedenPorts.snakeden.ports.playerInput
+           ,inputUp = player => { return {player,move : "up"}}
+           ,inputDown = player => { return {player,move : "down"}}
+           ,inputLeft = player => { return {player,move : "left"}}
+           ,inputRight = player => { return {player,move : "right"}}
+        */
 
- 
+        //this should be coming from Elm!!
+        //TODO: 
+        // this is the this the onStringMessage Handler
+        function keyPressed() {
+            // console.log(keyCode, gameModel.position)
+            if (keyCode === 87 /*w*/) { portPlayerInput.send(inputUp("green")); } //direction = UP}
+            if (keyCode === 65 /*a*/ ) { portPlayerInput.send(inputLeft("green")); } //direction = LT}
+            if (keyCode === 83 /*s*/) { portPlayerInput.send(inputDown("green")); } //direction = DN}
+            if (keyCode === 68 /*d*/) { portPlayerInput.send(inputRight("green")); } //direction = RT}
+            if (keyCode === 80 /*p*/) { 
+                speed = speed > 0 ? 0 : 1 
+                if(speed == 0 ) {
+                    noLoop();
+                } else {
+                    loop();
+                }
+            }
+            
+
+            console.log("dir = ", direction, gameModel.position)
+            gameModel = Object.assign({},{position: gameModel.position, direction: direction})
+        }
+
+        function setup() {
+            let canvas = createCanvas(640,480);
+            canvas.parent('sketch')
+            addPlayer(getPlayer('green',{initX:320,initY:240,color:"green",speed:1}))
+            // noLoop();
+            console.log(width,height)
+            // pos2Index  = posBufferLookup(width,height)
+            // noLoop();        
+
+            // connectToElm();
+        }
+
+        let nextPosition = gameModel.position
+            ,buffer
+            ,nextPixel
+
+        let updatePosAndCollisionCheck = playerobj => {
+               newPos = posUpdate[playerobj.dir](playerobj.x
+                                                 ,playerobj.y
+                                                 ,playerobj.jumping ? 10 : playerobj.speed)
+               playerobj.pX = playerobj.x
+               playerobj.pY = playerobj.y
+               playerobj.x = newPos[0]
+               playerobj.y = newPos[1]
+               playerobj.jumping = false
+               playerobj.alive =  !collided(playerobj.x,playerobj.y)
+                                
+           }
+          ,collided = (x,y) => {
+                           let pxl = get(x,y)
+                           return (pxl[0] + pxl[1] + pxl[2])> 0
+          }
+
+        function update() {
+            loadPixels();
+            //filter out the alive players
+            let alive = _.filter(_.values(players), p => p.alive )
+            //will update the pos of the player, check for collisions
+            _.each(alive, updatePosAndCollisionCheck)
+        }
+
+        /*
+        function draw() {
+            // fill(0,100,0)
+            noFill();
+            stroke(200,0,0);
+            rect(0,0,639,479);
+            stroke(0,200,0);
+
+
+            update();
+            _.each( _.filter( _.values(players) , p => p.alive)
+                  , aliveP => {
+                         line(aliveP.pX, aliveP.pY, aliveP.x, aliveP.y)
+                  })
+
+
+        }
+        */
+
+
+</script>
+
+
    
-    btnLeft = dirButton('&#8678')
-      .addClass(baseBtnClass)
-      .addClass(btnPaletteClass)
-      .addClass(btnHoverPaletteClass)
-      .addClass(playerModel.currentDirection == 'left' ? btnActiveClass : btnInactiveClass)
-  
-   
-    btnRight = dirButton('&#8680')
-      .addClass(baseBtnClass)
-      .addClass(btnPaletteClass)
-      .addClass(btnHoverPaletteClass)
-      .addClass(playerModel.currentDirection == 'right' ? btnActiveClass : btnInactiveClass)
-
-
-  
-  posTop(btnUp)
-  posBottom(btnDown)
-  posLeft(btnLeft)
-  posRight(btnRight)
-  
-  fill('white')
-  textSize(32)
-  textAlign(CENTER)
-  text("Player 1",width*0.5,50)
-
-}
-
-function draw() {
-  
-}
-
-//var palette = {'bg': 'lime', 'txt': 'green', 'border': 'deep-orange'}
-
-
-function dirButton(lbl, opts) {
-  /*
-  var styleClasses = "w3-"+opts.bg+
-                 " " + "w3-text-" +
-                 opts.txt + " " +
-                "w3-" + opts.border
-                +" " + "w3-border"
-                */
-  //console.log(styleClasses)
-  
-  return createButton(lbl)
-          .addClass('w3-button w3-xxxlarge')
-  
-}
-//upBtn(palette)
-
-//palette({txt, color, hover, selectedColor, selectedText})
-</script>   
 </body>
 </html>
