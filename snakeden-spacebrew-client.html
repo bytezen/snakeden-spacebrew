@@ -74,7 +74,7 @@ function sendDirection(dir) {
         return;
     }
 
-    spacebrew.send("move_player1", "string", dir)
+    spacebrew.send("player1:move", "string", dir)
 }
 
 function setup() {
@@ -135,11 +135,11 @@ function setup() {
 				    // ,onBooleanMessage = (msg) => {
 				    //     console.log('[onBooleanMessage]',msg)
 				    // }
-	spacebrew.addPublish("button","boolean",0)
-	spacebrew.addPublish("move_player1","string","")
+	// spacebrew.addPublish("button","boolean",0)
+	spacebrew.addPublish("player1:move","string","")
 	spacebrew.addSubscribe("player1_moves","string","")
 	spacebrew.onStringMessage( onStringMessage )
-	spacebrew.connect("127.0.0.1", 9000, "SnakeDen","player 1 snakeden-client");//,"a test of this shit");
+	spacebrew.connect("127.0.0.1", 9000, "SnakeDen-Player 1","player 1 snakeden-client");//,"a test of this shit");
 }
 
 function onStringMessage(channelName, value) {

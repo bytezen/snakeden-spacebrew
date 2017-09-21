@@ -7,6 +7,7 @@
     <script src="js/p5.min.js"></script>
     <script src="js/p5.dom.min.js"></script>
     <script src="js/lodash.min.js"></script>
+    <script src="js/p5.spacebrew.js"></script>
     <link rel="stylesheet" href="css/w3.css">
     <style>
       .playerControl {
@@ -19,6 +20,32 @@
 <body>
         <div class="w3-container w3-cell _w3-border" id="sketch"></div>  
 
+<!-- Spacebrew -->
+<script>
+
+  let onStringMessage =  (name, value) => {
+    console.log('[onStringMessage]',name,value)
+    let key = s =>  "_"+s+"_"
+    let [playerid,command] = name.split(":")
+        ,player = _.get(players,key(playerid),-1)
+
+    console.log('[onStringMessage] message matches player: ', playerid, key(playerid), player)
+    if(player != -1) {
+      player.direction = value.toLowerCase() 
+    }
+  }
+
+  let	spacebrew = new Spacebrew()
+				    // ,onBooleanMessage = (msg) => {
+				    //     console.log('[onBooleanMessage]',msg)
+            // }
+
+	spacebrew.addSubscribe("player1:move","string","")
+	// spacebrew.addSubscribe("player1_moves","string","")
+	spacebrew.onStringMessage( onStringMessage )
+	spacebrew.connect("127.0.0.1", 9000, "SnakeDen Game","snakeden-game");//,"a test of this shit");
+
+</script>
 <!-- Player Object -->
 <script>
           let getPlayer = (name, opts = {}) => {
@@ -38,7 +65,7 @@
                 , y = config.initY
                 , pX = config.initX
                 , pY = config.initY
-                , dir = config.initDirection
+                , direction = config.initDirection
                 , jumps = config.initJumps
                 , speed = config.speed
                 , color = config.color
@@ -50,7 +77,7 @@
                     , y
                     , pX
                     , pY
-                    , dir
+                    , direction
                     , jumps
                     , speed
                     , color
@@ -60,6 +87,14 @@
         }
 </script>
 
+<!-- Game Model -->
+<script>
+  // let gameModel = () => {
+  //   /* support colors for 20 players?? */
+  //   let colorModel = ['red','green','blue']
+  // }()
+
+</script>
 <!-- Main game Script -->
 <script>
       let players = {} 
@@ -71,15 +106,20 @@
       let gameModel = {
               players: []
              ,activePlayers: {} 
+             ,paused: false
+            //  ,colorModel: playerColors
           }
 
-      let init = () => {
+      let init = (playerCount) => {
         //initialize the game players
         //currently supports N players
-        _.each(_.range(PLAYERS)
+        _.each(_.range(playerCount)
               , i => {
-                       addPlayer(getPlayer('_player'+i+'_'
-                                          ,{color:'red'}
+                       addPlayer(getPlayer('_player'+(i+1)+'_'
+                                          ,{color: color('#FF0000')//'red'
+                                           ,initX : (i+1) * width * 0.1
+                                           ,initY : 0.1 * height
+                                           }
                                           )
                                 )
                      }
@@ -124,11 +164,11 @@
                                 console.log('got something from elm -- ',fromElm)
                                 //now the idea is to set the direction of the player with
                                 //the matching name
-                                let [name,dir] = fromElm.split(',')
+                                let [name,direction] = fromElm.split(',')
                                 let p = players[name]
                                 if(!_.isNil(p)) {
-                                    console.log('got a new direction for ', name, ': ', p, ' new direction = ', dir)
-                                    p.dir = dir.toLowerCase()
+                                    console.log('got a new direction for ', name, ': ', p, ' new direction = ', direction)
+                                    p.direction = direction.toLowerCase()
                                 } else {
                                     console.error("directions for unknown player: ", fromElm)
                                 }
@@ -148,35 +188,42 @@
         //TODO: 
         // this is the this the onStringMessage Handler
         function keyPressed() {
-            // console.log(keyCode, gameModel.position)
-            if (keyCode === 87 /*w*/) { portPlayerInput.send(inputUp("green")); } //direction = UP}
-            if (keyCode === 65 /*a*/ ) { portPlayerInput.send(inputLeft("green")); } //direction = LT}
-            if (keyCode === 83 /*s*/) { portPlayerInput.send(inputDown("green")); } //direction = DN}
-            if (keyCode === 68 /*d*/) { portPlayerInput.send(inputRight("green")); } //direction = RT}
-            if (keyCode === 80 /*p*/) { 
-                speed = speed > 0 ? 0 : 1 
-                if(speed == 0 ) {
-                    noLoop();
-                } else {
-                    loop();
-                }
-            }
             
-
-            console.log("dir = ", direction, gameModel.position)
-            gameModel = Object.assign({},{position: gameModel.position, direction: direction})
+            // console.log(keyCode, gameModel.position)
+            // if (keyCode === 87 /*w*/) { portPlayerInput.send(inputUp("green")); } //direction = UP}
+            // if (keyCode === 65 /*a*/ ) { portPlayerInput.send(inputLeft("green")); } //direction = LT}
+            // if (keyCode === 83 /*s*/) { portPlayerInput.send(inputDown("green")); } //direction = DN}
+            // if (keyCode === 68 /*d*/) { portPlayerInput.send(inputRight("green")); } //direction = RT}
+            if (keyCode === 80 /*p*/) { 
+              gameModel.paused = !gameModel.paused;
+              if(gameModel.paused) {
+                noLoop()
+                console.log('[keyPressed] paused')
+              } else {
+                loop()
+                console.log('[keyPressed] unpaused')
+              }
+            }
+            //     speed = speed > 0 ? 0 : 1 
+            //     if(speed == 0 ) {
+            //         noLoop();
+            //     } else {
+            //         loop();
+            //     }
+            // }
+            // console.log("direction = ", direction, gameModel.position)
+            // gameModel = Object.assign({},{position: gameModel.position, direction: direction})
+            
         }
 
         function setup() {
             let canvas = createCanvas(640,480);
             canvas.parent('sketch')
-            addPlayer(getPlayer('green',{initX:320,initY:240,color:"green",speed:1}))
-            // noLoop();
-            console.log(width,height)
-            // pos2Index  = posBufferLookup(width,height)
-            // noLoop();        
 
-            // connectToElm();
+            init(1);
+            noFill();
+            stroke(200,0,0);
+            rect(0,0,639,479);
         }
 
         let nextPosition = gameModel.position
@@ -184,7 +231,9 @@
             ,nextPixel
 
         let updatePosAndCollisionCheck = playerobj => {
-               newPos = posUpdate[playerobj.dir](playerobj.x
+            if(playerobj.direction != "") {
+
+               newPos = posUpdate[playerobj.direction](playerobj.x
                                                  ,playerobj.y
                                                  ,playerobj.jumping ? 10 : playerobj.speed)
                playerobj.pX = playerobj.x
@@ -193,7 +242,7 @@
                playerobj.y = newPos[1]
                playerobj.jumping = false
                playerobj.alive =  !collided(playerobj.x,playerobj.y)
-                                
+            }
            }
           ,collided = (x,y) => {
                            let pxl = get(x,y)
@@ -201,31 +250,24 @@
           }
 
         function update() {
-            loadPixels();
-            //filter out the alive players
-            let alive = _.filter(_.values(players), p => p.alive )
-            //will update the pos of the player, check for collisions
-            _.each(alive, updatePosAndCollisionCheck)
+            if(!gameModel.paused) {
+              loadPixels();
+              //filter out the alive players
+              let alive = _.filter(_.values(players), p => p.alive )
+              //will update the pos of the player, check for collisions
+             _.each(alive, updatePosAndCollisionCheck)
+            }
         }
 
-        /*
         function draw() {
             // fill(0,100,0)
-            noFill();
-            stroke(200,0,0);
-            rect(0,0,639,479);
-            stroke(0,200,0);
-
-
             update();
             _.each( _.filter( _.values(players) , p => p.alive)
-                  , aliveP => {
-                         line(aliveP.pX, aliveP.pY, aliveP.x, aliveP.y)
+                  , alivePlayer => {
+                         stroke(alivePlayer.color);
+                         line(alivePlayer.pX, alivePlayer.pY, alivePlayer.x, alivePlayer.y)
                   })
-
-
         }
-        */
 
 
 </script>
