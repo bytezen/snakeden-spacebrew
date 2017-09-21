@@ -53,7 +53,7 @@
             let config = _.assign({
                                     initX: 0
                                     ,initY: 0
-                                    ,initDirection: ""
+                                    ,initDirection: "down"
                                     ,initJumps: 3
                                     ,speed: 1
                                     ,color: "black"
@@ -89,10 +89,30 @@
 
 <!-- Game Model -->
 <script>
-  // let gameModel = () => {
-  //   /* support colors for 20 players?? */
-  //   let colorModel = ['red','green','blue']
-  // }()
+  let gameModel = function() {
+    /* support colors for 20 players?? */
+    let colorModel = ['#cddc39','#FF0000','#00ff00','#0000ff','#ffc107'
+                     ,'#00ffff' ,'#2196F3' ,'#795548' ,'#607d8b','#ff9800']
+        ,strokeWeight = 2//0.0
+        // ,strokeWeight_2 = strokeWeight*0.5
+        ,updateByDirection = {
+                 up:    (x,y,speed) => [x,y-(strokeWeight * speed)]
+                //  up:    (x,y,speed) => [x,y-speed]
+                ,down:  (x,y,speed) => [x,y+(strokeWeight * speed)]
+                ,left:  (x,y,speed) => [x-(strokeWeight * speed),y]
+                ,right: (x,y,speed) => [x+(strokeWeight * speed),y]
+            }
+
+
+    return {
+      players: []
+      // ,activePlayers: {}
+      ,paused: false
+      ,colorModel
+      ,strokeWeight
+      ,updateByDirection
+    }
+  }()
 
 </script>
 <!-- Main game Script -->
@@ -103,20 +123,23 @@
       let addPlayer = (obj) => {
                             players[obj.name] = obj
                         }
+      /*
       let gameModel = {
               players: []
-             ,activePlayers: {} 
+            //  ,activePlayers: {} 
              ,paused: false
             //  ,colorModel: playerColors
           }
+      */
 
       let init = (playerCount) => {
         //initialize the game players
         //currently supports N players
         _.each(_.range(playerCount)
               , i => {
+                       console.log('creating player ', i, 'color ', gameModel.colorModel[i])
                        addPlayer(getPlayer('_player'+(i+1)+'_'
-                                          ,{color: color('#FF0000')//'red'
+                                          ,{color: color(gameModel.colorModel[i])//'red'
                                            ,initX : (i+1) * width * 0.1
                                            ,initY : 0.1 * height
                                            }
@@ -129,12 +152,12 @@
          given a direction map to a function that will return a new position
          moving at some speed in that direction
       */
-      let posUpdate = {
-                 up:    (x,y,speed) => [x,y-speed]
-                ,down:  (x,y,speed) => [x,y+speed]
-                ,left:  (x,y,speed) => [x-speed,y]
-                ,right: (x,y,speed) => [x+speed,y]
-            }
+      // let posUpdate = {
+      //            up:    (x,y,speed) => [x,y-speed]
+      //           ,down:  (x,y,speed) => [x,y+speed]
+      //           ,left:  (x,y,speed) => [x-speed,y]
+      //           ,right: (x,y,speed) => [x+speed,y]
+      //       }
 
       var LT = 0, RT = 1, UP = 2, DN = 3, direction = DN;
       var speed = 1; 
@@ -220,10 +243,12 @@
             let canvas = createCanvas(640,480);
             canvas.parent('sketch')
 
-            init(1);
+            init(10);
             noFill();
             stroke(200,0,0);
+            strokeWeight(1);
             rect(0,0,639,479);
+            strokeWeight(gameModel.strokeWeight);
         }
 
         let nextPosition = gameModel.position
@@ -232,10 +257,12 @@
 
         let updatePosAndCollisionCheck = playerobj => {
             if(playerobj.direction != "") {
-
-               newPos = posUpdate[playerobj.direction](playerobj.x
-                                                 ,playerobj.y
-                                                 ,playerobj.jumping ? 10 : playerobj.speed)
+               updatePosFn = gameModel.updateByDirection[playerobj.direction]
+              //  newPos = posUpdate[playerobj.direction](playerobj.x
+               newPos = updatePosFn(playerobj.x
+                                   ,playerobj.y
+                                   ,playerobj.jumping ? 10 : playerobj.speed
+                                  )
                playerobj.pX = playerobj.x
                playerobj.pY = playerobj.y
                playerobj.x = newPos[0]
