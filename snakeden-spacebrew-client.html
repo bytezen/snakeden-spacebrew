@@ -14,7 +14,7 @@
         max-width: 200px;
       }
     </style>
-    <title>Snakeden - Player 1</title>
+    <title>Snakeden - Player 0</title>
 </head>
 <body>
         <div class="w3-container w3-cell _w3-border" id="sketch"></div>  
@@ -74,7 +74,7 @@ function sendDirection(dir) {
         return;
     }
 
-    spacebrew.send("player1:move", "string", dir)
+    spacebrew.send("player0", "string", dir)
 }
 
 function setup() {
@@ -136,10 +136,10 @@ function setup() {
 				    //     console.log('[onBooleanMessage]',msg)
 				    // }
 	// spacebrew.addPublish("button","boolean",0)
-	spacebrew.addPublish("player1:move","string","")
-	spacebrew.addSubscribe("player1_moves","string","")
+	spacebrew.addPublish("player0","string","")
+	spacebrew.addSubscribe("player0_moves","string","")
 	spacebrew.onStringMessage( onStringMessage )
-	spacebrew.connect("127.0.0.1", 9000, "SnakeDen-Player 1","player 1 snakeden-client");//,"a test of this shit");
+	spacebrew.connect("127.0.0.1", 9000, "SnakeDen-Player 0","player 1 snakeden-client");//,"a test of this shit");
 }
 
 function onStringMessage(channelName, value) {

@@ -1,0 +1,5 @@
+'amber','#ffc107'
+'aqua','#00ffff'
+'blue','#2196F3'
+'brown','#795548'
+'blue-grey','#607d8b'
